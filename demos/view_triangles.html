@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<!-- Load the Paper.js library -->
+	<script type="text/javascript" src="dist/paper-full.min.js"></script>
+	<!-- Define inlined PaperScript associate it with myCanvas -->
+	<script type="text/javascript" src="t8.js"></script>
+	<script type="text/javascript">
+		var arrangements = {};
+
+		function add_arrangement(canvas_name, ts) {
+			arrangements[canvas_name] = ts;
+		}
+
+		function draw_arrangements() {
+			for (const key in arrangements) {
+				draw_arrangement(key, arrangements[key]);
+			}
+		}
+
+		function draw_arrangement(canvas_name, ts) {
+
+			// Get a reference to the canvas object:
+			const canvas = document.getElementById(canvas_name);
+			// Create an empty project and a view for the canvas:
+			paper.setup(canvas);
+
+			// scale the canvas coordinates to fit unit [-1,1]x[-1,1] square canvas:
+			viewW = paper.view.viewSize.width;
+			paper.view.matrix.scale(viewW / 2);
+			// paper.view.viewSize.height = viewW;
+
+			for (const t of ts) {
+				// console.log(t)
+				draw_triangle(t.v1, t.v2, t.v3,'grey')
+			}
+
+			// Draw the view now:
+			paper.view.draw();
+		}
+
+		function draw_triangle(p1,p2,p3,c) {
+			const pp1 = new paper.Point(p1.x+1,1-p1.y);
+			const pp2 = new paper.Point(p2.x+1,1-p2.y);
+			const pp3 = new paper.Point(p3.x+1,1-p3.y);
+			const t = new paper.Path([pp1,pp2,pp3,pp1]);
+			console.log(t)
+			t.strokeColor = 'black';
+			t.strokeWidth = 0.002;
+			t.fillColor = c;
+			t.opacity = 0.5;
+		}
+
+		// function boxGradient(x, y, w, h) {
+		// 	return {
+		// 		gradient: {
+		// 			stops: ['salmon', 'pink']
+		// 		},
+		// 		origin: new paper.Point(x, y),
+		// 		destination: new paper.Point(x + w, y + h)
+		// 	}
+		// }
+
+		window.onload = function () {
+
+			// add some JSON-encoded arrangements to specific canvases:
+			add_arrangement('myCanvas1', triangles);
+
+			// add_arrangement('myCanvas1', '[{ "v1": { "x": -1.0, "y": -0.9 }, "v2": { "x": 1.0, "y": -0.9 }, "v3": { "x": 0.0, "y": 0.8320508075688773 } }]');
+
+			// draw the saved arrangements onto the canvases:
+			draw_arrangements();
+		}
+	</script>
+</head>
+
+<body>
+	<canvas id="myCanvas1" width="800px" height="800px"></canvas>
+	<!-- <canvas id="myCanvas2" width="1000px" height="500px"></canvas> -->
+</body>
+
+</html>

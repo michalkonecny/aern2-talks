@@ -20,6 +20,8 @@ import AERN2.MP
 import AERN2.Real
 -- import AERN2.MP.WithCurrentPrec
 import Math.NumberTheory.Logarithms (integerLog2)
+import Text.Printf (printf)
+import Data.List (intercalate)
 
 ---------------------------------------
 -- Haskell basics with MixedTypesNumPrelude
@@ -215,6 +217,19 @@ sierpinskiTriangleFn levels =
     to p (Triangle p1 p2 p3) = 
       Triangle (midPt p p1) (midPt p p2) (midPt p p3)
     
+
+coveringToJSON :: Covering R2 -> String
+coveringToJSON triangles =
+  printf "[%s]" $ intercalate ",\n" $ map tr triangles
+  where
+  tr :: Triangle R2 -> String
+  tr (Triangle a b c) =
+    printf "{ \"v1\": %s, \"v2\": %s, \"v3\": %s }" (p a) (p b) (p c)
+  p :: R2 -> String
+  p (Point2D x y) =
+    printf "{ \"x\": %s, \"y\": %s }" (show $ d x) (show $ d y)
+  d :: CReal -> Double
+  d = double . centre . unCN . (\r -> r ? (bits 53))
 
 -- type CKleeneanTrueTerminates = CKleenean -- if True, it must show in finite time
 -- type SemiComputablePred t = t -> CKleeneanTrueTerminates
