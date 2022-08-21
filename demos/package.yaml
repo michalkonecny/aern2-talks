@@ -1,0 +1,47 @@
+name:                aern2-talks-demos
+version:             0.1.0.0
+license:             MIT
+author:              "Michal Konečný"
+maintainer:          "mikkonecny@gmail.com"
+copyright:           "2022 Michal Konečný"
+
+# extra-source-files:
+# - README.md
+
+# Metadata used when publishing your package
+synopsis:            Demos of aern2
+category:            Math
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/michalkonecny/aern2>
+
+dependencies:
+- base == 4.*
+- integer-logarithms
+- collect-errors >= 0.1.5
+- mixed-types-num >= 0.5.10
+- aern2-mp >= 0.2.10
+- aern2-real >= 0.2.10
+
+default-extensions:
+- RebindableSyntax
+
+library:
+  source-dirs: src
+  ghc-options:
+  - -O2 -Wall -fno-warn-missing-signatures -fno-warn-partial-type-signatures -fno-warn-unused-imports -fno-warn-name-shadowing
+
+#executables:
+  #demos-magnitude:
+    #main:                magnitude.hs
+    #source-dirs:         main
+    #ghc-options:
+    #- -rtsopts
+    #- -threaded
+    #- -with-rtsopts=-N
+    #- -Wall
+    #- -O2
+    #dependencies:
+    #- demos

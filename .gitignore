@@ -1,0 +1,4 @@
+.stack-work
+stack.yaml.lock
+
+demos/aern2-talks-demos.cabal
