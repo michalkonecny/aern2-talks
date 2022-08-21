@@ -70,6 +70,12 @@ logistic c n x0 =
 logistic1 :: Integer -> CReal
 logistic1 n = logistic 3.82 n (creal 0.5)
 
+{-
+ghci> logistic1 15 ? (bits 100)
+[0.75380485336892032057596409... ± ~1.3094e-48 ~2^(-159)]
+(0.00 secs, 1,367,352 bytes)
+-}
+
 -- The following version artificially disables memoization of the parameter x
 -- by turning x into a function of a dummy parameter ():
 
@@ -81,6 +87,12 @@ logistic_BAD c n x0 =
 
 logistic1_BAD :: Integer -> CReal
 logistic1_BAD n = logistic_BAD 3.82 n (creal 0.5)
+
+{-
+ghci> logistic1_BAD 15 ? (bits 100)
+[0.75380485336892032057596409... ± ~1.3094e-48 ~2^(-159)]
+(0.95 secs, 1,448,809,840 bytes)
+-}
 
 ---------------------------------------
 -- Maximum of two reals
@@ -121,7 +133,6 @@ real_max_PAR_test1 = real_max_PAR (pi - pi) (e - e)
 magnitude_belowHalf_pre :: (RealNumber t) => t -> CN Integer
 magnitude_belowHalf_pre x =
   searchFrom 0
-  -- integer $ fromJust $ List.findIndex id $ map test [0..]
   where
   searchFrom n =
     if select (0.5^^(n+2) < x) (x < 0.5^^(n+1))
@@ -131,11 +142,11 @@ magnitude_belowHalf_pre x =
 magnitude_belowHalf :: (RealNumber t) => t -> CN Integer
 magnitude_belowHalf x =
   searchFrom 0
-  -- integer $ fromJust $ List.findIndex id $ map test [0..]
   where
   searchFrom n =
     if select (x <= 0) (-(0.5^^(n+2)) < x)
-      then CN.noValueNumErrorCertain $ CN.NumError "magnitude1 called with a non-positive number"
+      then CN.noValueNumErrorCertain $ CN.NumError
+            "magnitude_belowHalf called with a non-positive number"
       else
       if select (0.5^^(n+2) < x) (x < 0.5^^(n+1))
         then (cn (-n))
@@ -156,34 +167,82 @@ magnitude x =
 
 -- start with supplying types for hyperspaces:
 
-type CKleeneanTrueTerminates = CKleenean -- if True, it must show in finite time
-type SemiComputablePred t = t -> CKleeneanTrueTerminates
+class HasCovering t where
+  type BasicShape t
 
-newtype OpenSet t = OpenSet { isIn :: SemiComputablePred t }
-newtype ClosedSet t = ClosedSet { isOut :: SemiComputablePred t }
-newtype CompactSet t = CompactSet { isEmpty :: SemiComputablePred (ClosedSet t) }
-newtype OvertSet t = OvertSet { isNonEmpty :: SemiComputablePred (OpenSet t) }
+type Covering t = [BasicShape t]
 
-data Grapic t = Graphic { compact :: CompactSet t, overt :: OvertSet t }
+type Graphic t = CSequence (Covering t)
 
-data R2 = R2 { x :: CReal, y :: CReal }
 
-halfUnitSquare :: Grapic R2
-halfUnitSquare = Graphic { compact, overt }
-  where
-  compact = CompactSet { isEmpty }
+-- now specialise to R^2
+
+data R2 = Point2D { x :: CReal, y :: CReal }
+  deriving (Show)
+
+pt :: (CanBeCReal x, CanBeCReal y) => x -> y -> R2
+pt x y = Point2D { x = creal x, y = creal y }
+
+midPt :: R2 -> R2 -> R2
+midPt (Point2D x1 y1) (Point2D x2 y2) = Point2D ((x1 + x2)/2) ((y1 + y2)/2)
+
+data Triangle t = Triangle t t t
+  deriving (Show)
+
+instance HasCovering R2 where
+  type BasicShape R2 = Triangle R2
+
+sierpinskiTriangle :: Graphic R2
+sierpinskiTriangle = 
+  cseqFromPrecFunction (cn . sierpinskiTriangleFn . integer . integerLog2 . integer)
+
+sierpinskiTriangleFn :: Integer -> [Triangle R2]
+sierpinskiTriangleFn levels = 
+    iterateABC levels covering0
     where
-    isEmpty _x@(ClosedSet { isOut = _isOutOfX }) = 
-      CSequence undefined
-    -- TODO
-  overt = undefined -- TODO
+    covering0 = [Triangle a b c]
 
-sierpinskiTriangle :: Grapic R2
-sierpinskiTriangle = Graphic { compact, overt }
-  where
-  compact = undefined -- TODO
-  overt = undefined -- TODO
+    a = pt (-1) (-0.9)
+    b = pt (1) (-0.9)
+    c = pt 0 (-0.9 + (sqrt 3))
 
+    iterateABC :: Integer -> [Triangle R2] -> [Triangle R2]
+    iterateABC 0 covering = covering
+    iterateABC n covering = iterateABC (n - 1) covering'
+      where
+      covering' = concat [ [to a t, to b t, to c t] | t <- covering ]
+
+    to p (Triangle p1 p2 p3) = 
+      Triangle (midPt p p1) (midPt p p2) (midPt p p3)
+    
+
+-- type CKleeneanTrueTerminates = CKleenean -- if True, it must show in finite time
+-- type SemiComputablePred t = t -> CKleeneanTrueTerminates
+
+-- newtype OpenSet t = OpenSet { isIn :: SemiComputablePred t }
+-- newtype ClosedSet t = ClosedSet { isOut :: SemiComputablePred t }
+-- newtype CompactSet t = CompactSet { isEmpty :: SemiComputablePred (ClosedSet t) }
+-- newtype OvertSet t = OvertSet { isNonEmpty :: SemiComputablePred (OpenSet t) }
+
+-- data Grapic t = Graphic { compact :: CompactSet t, overt :: OvertSet t }
+
+
+-- halfUnitSquare :: Grapic R2
+-- halfUnitSquare = Graphic { compact, overt }
+--   where
+--   compact = CompactSet { isEmpty }
+--     where
+--     isEmpty _x@(ClosedSet { isOut = _isOutOfX }) = 
+--       CSequence undefined 
+--       -- this will be inefficient as a fine covering of the 
+--       -- graphic will be computed for each query
+--   overt = undefined
+
+-- sierpinskiTriangle :: Graphic R2
+-- sierpinskiTriangle = Graphic { compact, overt }
+--   where
+--   compact = undefined
+--   overt = undefined
 
 ---------------------------------------
 -- Square root via Heron method
