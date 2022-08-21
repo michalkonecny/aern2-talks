@@ -31,8 +31,8 @@ system-ghc: true
 #   - wai
 packages:
 - .
-- ../../../aern2/aern2-mp
-- ../../../aern2/aern2-real
+# - ../../../aern2/aern2-mp
+# - ../../../aern2/aern2-real
 
 # Dependency packages to be pulled from upstream that are not in the resolver.
 # These entries can reference officially published versions as well as
@@ -47,8 +47,8 @@ extra-deps:
 - cdar-mBound-0.1.0.4
 - collect-errors-0.1.5.0
 - mixed-types-num-0.5.10
-# - aern2-mp-0.2.9.3
-# - aern2-real-0.2.9.3
+- aern2-mp-0.2.10.0
+- aern2-real-0.2.10.0
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
