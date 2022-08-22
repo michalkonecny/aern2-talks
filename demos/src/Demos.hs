@@ -191,15 +191,18 @@ midPt (Point2D x1 y1) (Point2D x2 y2) = Point2D ((x1 + x2)/2) ((y1 + y2)/2)
 data Triangle t = Triangle t t t
   deriving (Show)
 
-instance HasCovering R2 where
-  type BasicShape R2 = Triangle R2
+data Ball t = Ball t CReal
+  deriving (Show)
 
-sierpinskiTriangle :: Graphic R2
-sierpinskiTriangle = 
-  cseqFromPrecFunction (cn . sierpinskiTriangleFn . integer . integerLog2 . integer)
+-- instance HasCovering R2 where
+--   type BasicShape R2 = Triangle R2
 
-sierpinskiTriangleFn :: Integer -> [Triangle R2]
-sierpinskiTriangleFn levels = 
+-- sierpinskiTriangle :: Graphic R2
+-- sierpinskiTriangle = 
+--   cseqFromPrecFunction (cn . sierpinskiTriangleFn . integer . integerLog2 . integer)
+
+sierpinskiTriangleTriangles :: Integer -> [Triangle R2]
+sierpinskiTriangleTriangles levels = 
     iterateABC levels covering0
     where
     covering0 = [Triangle a b c]
@@ -216,15 +219,47 @@ sierpinskiTriangleFn levels =
 
     to p (Triangle p1 p2 p3) = 
       Triangle (midPt p p1) (midPt p p2) (midPt p p3)
+
+sierpinskiTriangleBalls :: Integer -> [Ball R2]
+sierpinskiTriangleBalls levels = 
+    iterateABC levels covering0
+    where
+    covering0 = [Ball (pt 0 0) (creal 1)]
+
+    a = pt (-1) (-0.9)
+    b = pt (1) (-0.9)
+    c = pt 0 (-0.9 + (sqrt 3))
     
 
-coveringToJSON :: Covering R2 -> String
-coveringToJSON triangles =
-  printf "[%s]" $ intercalate ",\n" $ map tr triangles
+    iterateABC :: Integer -> [Ball R2] -> [Ball R2]
+    iterateABC 0 covering = covering
+    iterateABC n covering = iterateABC (n - 1) covering'
+      where
+      covering' = concat [ [to a t, to b t, to c t] | t <- covering ]
+
+    to p (Ball c r) = 
+      Ball (midPt p c) (r / 2)
+
+trianglesToJSON :: [Triangle R2] -> String
+trianglesToJSON triangles =
+  printf "triangles = [%s]" $ intercalate ",\n" $ map tr triangles
   where
   tr :: Triangle R2 -> String
   tr (Triangle a b c) =
     printf "{ \"v1\": %s, \"v2\": %s, \"v3\": %s }" (p a) (p b) (p c)
+  p :: R2 -> String
+  p (Point2D x y) =
+    printf "{ \"x\": %s, \"y\": %s }" (show $ d x) (show $ d y)
+  d :: CReal -> Double
+  d = double . centre . unCN . (\r -> r ? (bits 53))
+
+ballsToJSON :: [Ball R2] -> String
+ballsToJSON balls =
+  printf "balls = [%s]" $ intercalate ",\n" $ map tr balls
+  where
+  tr :: Ball R2 -> String
+  tr (Ball c r) =
+    printf "{ \"c\": %s, \"r\": %s }" (p c) (show $ d r)
   p :: R2 -> String
   p (Point2D x y) =
     printf "{ \"x\": %s, \"y\": %s }" (show $ d x) (show $ d y)
@@ -258,6 +293,18 @@ coveringToJSON triangles =
 --   where
 --   compact = undefined
 --   overt = undefined
+
+-- type SFn s t1 t2 = (t1, s) -> (t2, s)
+
+-- type SemiComputablePredS s t = SFn s t CKleeneanTrueTerminates
+
+-- newtype CompactSetS s t = CompactSetS { isEmptyS :: SemiComputablePredS s (ClosedSet t) }
+
+-- stCompact :: CompactSetS (Covering R2) R2 
+-- stCompact = CompactSetS { isEmptyS }
+--   where
+--   isEmptyS (closedSet, prevCovering) 
+
 
 ---------------------------------------
 -- Square root via Heron method

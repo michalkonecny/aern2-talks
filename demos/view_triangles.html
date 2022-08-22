@@ -5,19 +5,9 @@
 	<!-- Load the Paper.js library -->
 	<script type="text/javascript" src="dist/paper-full.min.js"></script>
 	<!-- Define inlined PaperScript associate it with myCanvas -->
-	<script type="text/javascript" src="t8.js"></script>
+	<script type="text/javascript" src="t10.js"></script>
 	<script type="text/javascript">
 		var arrangements = {};
-
-		function add_arrangement(canvas_name, ts) {
-			arrangements[canvas_name] = ts;
-		}
-
-		function draw_arrangements() {
-			for (const key in arrangements) {
-				draw_arrangement(key, arrangements[key]);
-			}
-		}
 
 		function draw_arrangement(canvas_name, ts) {
 
@@ -33,23 +23,23 @@
 
 			for (const t of ts) {
 				// console.log(t)
-				draw_triangle(t.v1, t.v2, t.v3,'grey')
+				draw_triangle(t.v1, t.v2, t.v3,'black')
 			}
 
 			// Draw the view now:
 			paper.view.draw();
 		}
 
-		function draw_triangle(p1,p2,p3,c) {
+		function draw_triangle(p1,p2,p3,colour) {
 			const pp1 = new paper.Point(p1.x+1,1-p1.y);
 			const pp2 = new paper.Point(p2.x+1,1-p2.y);
 			const pp3 = new paper.Point(p3.x+1,1-p3.y);
 			const t = new paper.Path([pp1,pp2,pp3,pp1]);
-			console.log(t)
+			// console.log(t)
 			t.strokeColor = 'black';
-			t.strokeWidth = 0.002;
-			t.fillColor = c;
-			t.opacity = 0.5;
+			t.strokeWidth = 0.0001;
+			t.fillColor = colour;
+			t.opacity = 1.0;
 		}
 
 		// function boxGradient(x, y, w, h) {
@@ -63,14 +53,7 @@
 		// }
 
 		window.onload = function () {
-
-			// add some JSON-encoded arrangements to specific canvases:
-			add_arrangement('myCanvas1', triangles);
-
-			// add_arrangement('myCanvas1', '[{ "v1": { "x": -1.0, "y": -0.9 }, "v2": { "x": 1.0, "y": -0.9 }, "v3": { "x": 0.0, "y": 0.8320508075688773 } }]');
-
-			// draw the saved arrangements onto the canvases:
-			draw_arrangements();
+			draw_arrangement('myCanvas1', triangles);
 		}
 	</script>
 </head>
