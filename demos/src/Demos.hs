@@ -167,18 +167,6 @@ magnitude x =
 -- Computing a fractal drawing
 ---------------------------------------
 
--- start with supplying types for hyperspaces:
-
-class HasCovering t where
-  type BasicShape t
-
-type Covering t = [BasicShape t]
-
-type Graphic t = CSequence (Covering t)
-
-
--- now specialise to R^2
-
 data R2 = Point2D { x :: CReal, y :: CReal }
   deriving (Show)
 
@@ -193,13 +181,6 @@ data Triangle t = Triangle t t t
 
 data Ball t = Ball t CReal
   deriving (Show)
-
--- instance HasCovering R2 where
---   type BasicShape R2 = Triangle R2
-
--- sierpinskiTriangle :: Graphic R2
--- sierpinskiTriangle = 
---   cseqFromPrecFunction (cn . sierpinskiTriangleFn . integer . integerLog2 . integer)
 
 sierpinskiTriangleTriangles :: Integer -> [Triangle R2]
 sierpinskiTriangleTriangles levels = 
@@ -240,6 +221,26 @@ sierpinskiTriangleBalls levels =
     to p (Ball c r) = 
       Ball (midPt p c) (r / 2)
 
+simpleTriangleBalls :: Integer -> [Ball R2]
+simpleTriangleBalls levels = 
+  iter levels ball0
+  where
+  ball0 = Ball (pt 0.5 0.5) (creal 0.5)
+
+  iter 0 ball = [ball]
+  iter n ball =
+    [ballLB] ++ (iter (n-1) ballLT) ++ (iter (n-1) ballRB)
+    where
+    ((ballLB, ballLT), ballRB) = process ball
+
+    process (Ball (Point2D x y) r) =
+      ((ballLB, ballLT), ballRB)
+      where
+      ballLB = Ball (pt (x-r') (y-r')) r'
+      ballLT = Ball (pt (x-r') (y+r')) r'
+      ballRB = Ball (pt (x+r') (y-r')) r'
+      r' = r / 2
+
 trianglesToJSON :: [Triangle R2] -> String
 trianglesToJSON triangles =
   printf "triangles = [%s]" $ intercalate ",\n" $ map tr triangles
@@ -265,46 +266,6 @@ ballsToJSON balls =
     printf "{ \"x\": %s, \"y\": %s }" (show $ d x) (show $ d y)
   d :: CReal -> Double
   d = double . centre . unCN . (\r -> r ? (bits 53))
-
--- type CKleeneanTrueTerminates = CKleenean -- if True, it must show in finite time
--- type SemiComputablePred t = t -> CKleeneanTrueTerminates
-
--- newtype OpenSet t = OpenSet { isIn :: SemiComputablePred t }
--- newtype ClosedSet t = ClosedSet { isOut :: SemiComputablePred t }
--- newtype CompactSet t = CompactSet { isEmpty :: SemiComputablePred (ClosedSet t) }
--- newtype OvertSet t = OvertSet { isNonEmpty :: SemiComputablePred (OpenSet t) }
-
--- data Grapic t = Graphic { compact :: CompactSet t, overt :: OvertSet t }
-
-
--- halfUnitSquare :: Grapic R2
--- halfUnitSquare = Graphic { compact, overt }
---   where
---   compact = CompactSet { isEmpty }
---     where
---     isEmpty _x@(ClosedSet { isOut = _isOutOfX }) = 
---       CSequence undefined 
---       -- this will be inefficient as a fine covering of the 
---       -- graphic will be computed for each query
---   overt = undefined
-
--- sierpinskiTriangle :: Graphic R2
--- sierpinskiTriangle = Graphic { compact, overt }
---   where
---   compact = undefined
---   overt = undefined
-
--- type SFn s t1 t2 = (t1, s) -> (t2, s)
-
--- type SemiComputablePredS s t = SFn s t CKleeneanTrueTerminates
-
--- newtype CompactSetS s t = CompactSetS { isEmptyS :: SemiComputablePredS s (ClosedSet t) }
-
--- stCompact :: CompactSetS (Covering R2) R2 
--- stCompact = CompactSetS { isEmptyS }
---   where
---   isEmptyS (closedSet, prevCovering) 
-
 
 ---------------------------------------
 -- Square root via Heron method
