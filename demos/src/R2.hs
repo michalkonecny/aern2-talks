@@ -17,7 +17,8 @@ import Data.Maybe (fromJust)
 
 import AERN2.MP
 import AERN2.Real
--- import AERN2.MP.WithCurrentPrec
+import qualified AERN2.Real.Type as CRealType
+
 import Math.NumberTheory.Logarithms (integerLog2)
 import Text.Printf (printf)
 import Data.List (intercalate)
@@ -36,6 +37,31 @@ data Triangle t = Triangle t t t
 
 data Ball t = Ball t CReal
   deriving (Show)
+
+splitBallR2 :: Ball R2 -> [Ball R2]
+splitBallR2 (Ball (Point2D cx cy) r) =
+  [Ball (Point2D (cx-r') (cy-r')) r'
+  ,Ball (Point2D (cx+r') (cy-r')) r'
+  ,Ball (Point2D (cx-r') (cy+r')) r'
+  ,Ball (Point2D (cx+r') (cy+r')) r'
+  ]
+  where
+  r' = r/2
+
+subBallR2 :: Ball R2 -> Ball R2 -> CKleenean
+subBallR2 (Ball (Point2D x1 y1) r1) (Ball (Point2D x2 y2) r2) =
+  abs(x2-x1) <= r2-r1
+  && 
+  abs(y2-y1) <= r2-r1
+
+ballR2ToBlurPoint :: Ball R2 -> R2
+ballR2ToBlurPoint (Ball (Point2D x y) r) = Point2D xBlur yBlur
+  where
+  xBlur = CRealType.lift2 (CN.lift2 blur) r x
+  yBlur = CRealType.lift2 (CN.lift2 blur) r y
+  blur :: MPBall -> MPBall -> MPBall
+  blur rad = updateRadius (+ (errorBound rad))
+
 
 trianglesToJSON :: [Triangle R2] -> String
 trianglesToJSON triangles =

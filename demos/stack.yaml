@@ -31,6 +31,7 @@ system-ghc: true
 #   - wai
 packages:
 - .
+# - ../../../mixed-types-num
 # - ../../../aern2/aern2-mp
 # - ../../../aern2/aern2-real
 
@@ -46,9 +47,9 @@ packages:
 extra-deps:
 - cdar-mBound-0.1.0.4
 - collect-errors-0.1.5.0
-- mixed-types-num-0.5.10
-- aern2-mp-0.2.10.0
-- aern2-real-0.2.10.0
+- mixed-types-num-0.5.11
+- aern2-mp-0.2.11.0
+- aern2-real-0.2.11.0
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

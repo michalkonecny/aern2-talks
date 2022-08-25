@@ -197,7 +197,6 @@ sierpinskiTriangleBalls levels =
     a = pt (-1) (-0.9)
     b = pt (1) (-0.9)
     c = pt 0 (-0.9 + (sqrt 3))
-    
 
     iterateABC :: Integer -> [Ball R2] -> [Ball R2]
     iterateABC 0 covering = covering
