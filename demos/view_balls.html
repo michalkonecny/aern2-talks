@@ -5,7 +5,8 @@
 	<!-- Load the Paper.js library -->
 	<script type="text/javascript" src="dist/paper-full.min.js"></script>
 	<!-- Define inlined PaperScript associate it with myCanvas -->
-	<script type="text/javascript" src="b10.js"></script>
+	<script type="text/javascript" src="tr-b5.js"></script>
+	<!-- <script type="text/javascript" src="tr-b5-nonoverlap.js"></script> -->
 	<script type="text/javascript">
 		var arrangements = {};
 
@@ -22,8 +23,25 @@
 			// paper.view.viewSize.height = viewW;
 
 			for (const b of bs) {
+				colour = "white";
+				switch (b.s) {
+					case "inside":
+						colour = "green";
+						break;
+
+					case "outside":
+						colour = "red";
+						break;
+
+					case "intersects":
+						colour = "orange";
+						break;
+
+					default:
+						break;
+				}
 				// console.log(t)
-				draw_ball(b.c, b.r, 'black')
+				draw_ball(b.b.c, b.b.r, colour)
 			}
 
 			// Draw the view now:
@@ -36,9 +54,9 @@
 			const b = new paper.Path.Rectangle(pLT, pRB);
 			// console.log(b)
 			b.strokeColor = 'black';
-			b.strokeWidth = 0.0001;
+			b.strokeWidth = 0.001;
 			b.fillColor = colour;
-			b.opacity = 1.0;
+			b.opacity = 0.5;
 		}
 
 		// function boxGradient(x, y, w, h) {
