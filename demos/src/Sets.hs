@@ -7,16 +7,15 @@
 {-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 
 module Sets where
-import MixedTypesNumPrelude
-import qualified Numeric.CollectErrors as CN
-
-import Text.Printf (printf)
 
 import AERN2.MP
 import AERN2.Real
+import MixedTypesNumPrelude
+import qualified Numeric.CollectErrors as CN
 -- import AERN2.MP.WithCurrentPrec
 
 import R2
+import Text.Printf (printf)
 
 ---------------------------------------
 -- Types for general subsets
@@ -35,9 +34,19 @@ data OpenSet t
   = OpenSet {isInOpenSet :: SemiComputablePredBall t}
   | OpenSetBall {openSetBall :: Ball t}
 
+openSetBallR2 :: Ball R2 -> OpenSet R2
+openSetBallR2 b = OpenSet {isInOpenSet}
+  where
+    isInOpenSet qb = qb `subBallInnerR2` b
+
 data ClosedSet t
   = ClosedSet {isOutsideClosedSet :: SemiComputablePredBall t}
   | ClosedSetBall {closedSetBall :: Ball t}
+
+closedSetBallR2 :: Ball R2 -> ClosedSet R2
+closedSetBallR2 b = ClosedSet {isOutsideClosedSet}
+  where
+    isOutsideClosedSet qb = ballsDisjoint qb b
 
 newtype CompactSet t = CompactSet {closedSetIsOutside :: SemiComputablePred (ClosedSet t)}
 
@@ -75,7 +84,7 @@ paveGraphic
           [PavingBall {ball, isInside = CertainFalse, isOutside = CertainTrue, intersects = CertainFalse}]
         | depth < maxDepth =
           concat $ map (pave (depth + 1)) $ splitBallOverlapR2 ball
-          -- concat $ map (pave (depth + 1)) $ splitBallR2 ball
+        -- concat $ map (pave (depth + 1)) $ splitBallR2 ball
         | ballIntersects =
           [PavingBall {ball, isInside = TrueOrFalse, isOutside = CertainFalse, intersects = CertainTrue}]
         | otherwise =
@@ -84,6 +93,9 @@ paveGraphic
           ballInteriorIsInside = isTrueCN $ (isInside ball) ? pr
           ballIsOutside = isTrueCN $ closedSetIsOutside (ClosedSetBall ball) ? pr
           ballIntersects = isTrueCN $ openSetIntersects (OpenSetBall ball) ? pr
+          -- experimenting with open and closed sets represented fully by characteristic functions: (VERY SLOW, possibly broken)
+          -- ballIsOutside = isTrueCN $ closedSetIsOutside (closedSetBallR2 ball) ? pr
+          -- ballIntersects = isTrueCN $ openSetIntersects (openSetBallR2 ball) ? pr
 
 isTrueCN :: CN Kleenean -> Bool
 isTrueCN ckCN = case CN.toEither ckCN of
@@ -102,9 +114,12 @@ closedSetIsOutsideFromBallFn canvas isOutside = closedSetIsOutside
     closedSetIsOutside (ClosedSet {isOutsideClosedSet}) =
       search 0 canvas
       where
-        search n b =
-          isOutsideClosedSet b
-            || foldl1 (&&) (map (search (n + 1)) $ subBalls)
+        maxDepth = 7
+        search n b
+          | n >= maxDepth = ckleenean TrueOrFalse -- error "closedSetIsOutsideFromBallFn: reached maxDepth"
+          | otherwise =
+            isOutsideClosedSet b
+              || foldl1 (&&) (map (search (n + 1)) $ subBalls)
           where
             subBalls = filter (not . isCertain . isOutside) $ splitBallR2 b
             isCertain ck = isCertainlyTrue $ (ck ? prec (10 + n * 4))
@@ -119,11 +134,13 @@ openSetIntersectsFromBallFn canvas intersects = openSetIntersects
     openSetIntersects (OpenSet {isInOpenSet}) =
       search 0 canvas
       where
-        search n b =
-          (isInOpenSet b && (intersects b))
-            || foldl1 (||) (map (search (n + 1)) $ subBalls)
+        maxDepth = 7
+        search n b
+          | n >= maxDepth = ckleenean TrueOrFalse -- error "openSetIntersectsFromBallFn: reached maxDepth"
+          | otherwise =
+            (isInOpenSet b && (intersects b))
+              || foldl1 (||) (map (search (n + 1)) $ subBalls)
           where
             subBalls = filter (isPossible . intersects) $ splitBallR2 b
             -- isCertain ck = isCertainlyTrue $ (ck ? prec (10 + n * 4))
             isPossible ck = not . isCertainlyFalse $ (ck ? prec (10 + n * 4))
-

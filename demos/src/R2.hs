@@ -60,6 +60,16 @@ subBallR2 (Ball (Point2D x1 y1) r1) (Ball (Point2D x2 y2) r2) =
   abs (x2 - x1) <= r2 - r1
     && abs (y2 - y1) <= r2 - r1
 
+subBallInnerR2 :: Ball R2 -> Ball R2 -> CKleenean
+subBallInnerR2 (Ball (Point2D x1 y1) r1) (Ball (Point2D x2 y2) r2) =
+  abs (x2 - x1) < r2 - r1
+    && abs (y2 - y1) < r2 - r1
+
+ballsDisjoint :: Ball R2 -> Ball R2 -> CKleenean
+ballsDisjoint (Ball (Point2D x1 y1) r1) (Ball (Point2D x2 y2) r2) =
+  abs (x2 - x1) > r2 + r1
+    || abs (y2 - y1) > r2 + r1
+
 ballR2ToBlurPoint :: Ball R2 -> R2
 ballR2ToBlurPoint (Ball (Point2D x y) r) = Point2D xBlur yBlur
   where
