@@ -7,11 +7,11 @@
 {-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 
 module Triangle where
-import MixedTypesNumPrelude
-import qualified Numeric.CollectErrors as CN
 
 import AERN2.MP
 import AERN2.Real
+import MixedTypesNumPrelude
+import qualified Numeric.CollectErrors as CN
 -- import AERN2.MP.WithCurrentPrec
 
 import R2
@@ -61,18 +61,24 @@ sierpinskiTriangleCompact =
         search n (Ball p@(Point2D x y) r)
           | n == 0 = error "sierpinskiTriangleCompact: maxDepth reached"
           | otherwise =
-            (x + y > 2 * r)
-              || ((x < 0) && (y + r > 0) && (search (n - 1) (Ball (awayFrom v1 p) (2 * r))))
-              || ((x + r < 0) && (y + r < 0) && (search (n - 1) (Ball (awayFrom v2 p) (2 * r))))
-              || ((x + r > 0) && (y < 0) && (search (n - 1) (Ball (awayFrom v3 p) (2 * r))))
+            (x - r + y - r > 0) -- above the main diagonal
+              || ( (x + r < 0) && (0 < y - r) -- inside top left quadrant
+                     && (search (n - 1) (Ball (awayFrom v1 p) (2 * r)))
+                 )
+              || ( (x + r < 0) && (y + r < 0) -- inside bottom left quadrant
+                     && (search (n - 1) (Ball (awayFrom v2 p) (2 * r)))
+                 )
+              || ( (0 < x - r) && (y + r < 0) -- inside bottom right quadrant
+                     && (search (n - 1) (Ball (awayFrom v3 p) (2 * r)))
+                 )
 
 sierpinskiTriangleOvert :: OvertSet R2
 sierpinskiTriangleOvert =
   OvertSet {openSetIntersects = openSetIntersectsFromBallFn canvas interiorIntersects}
   where
-    v1 = pt (-1) (1)
-    v2 = pt (-1) (-1)
-    v3 = pt 1 (-1)
+    v1 = pt (-1) (1) -- top left corner
+    v2 = pt (-1) (-1) -- bottom left corner
+    v3 = pt 1 (-1) -- bottom right corner
     awayFrom (Point2D vx vy) (Point2D px py) = Point2D (2 * px - vx) (2 * py - vy)
     interiorIntersects b =
       search maxDepth b
@@ -81,7 +87,20 @@ sierpinskiTriangleOvert =
         search n (Ball p@(Point2D x y) r)
           | n == 0 = error "sierpinskiTriangleOvert: maxDepth reached"
           | otherwise =
-            undefined -- TODO
+            (not $ x - r + y - r > 0) -- not outside
+              && ( x + r + y + r > 0 -- intersects the main diagonal
+                     || (x - r < 0 && x + r > 0) -- intersects the y axis
+                     || (y - r < 0 && y + r > 0) -- intersects the x axis
+                     || ( (0 <= y - r) && (x + r <= 0) -- inside top left quadrant
+                            && (search (n - 1) (Ball (awayFrom v1 p) (2 * r))) -- intersects when zoomed away from v1
+                        )
+                     || ( (x + r <= 0) && (y + r <= 0) -- inside bottom left quadrant
+                            && (search (n - 1) (Ball (awayFrom v2 p) (2 * r))) -- intersects when zoomed away from v2
+                        )
+                     || ( (0 <= x - r) && (y + r <= 0) -- inside bottom right quadrant
+                            && (search (n - 1) (Ball (awayFrom v3 p) (2 * r))) -- intersects when zoomed away from v3
+                        )
+                 )
 
 sierpinskiTriangleGraphic :: Grapic R2
 sierpinskiTriangleGraphic =
