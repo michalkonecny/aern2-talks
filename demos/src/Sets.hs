@@ -46,31 +46,6 @@ newtype CompactSet t = CompactSet {closedSetIsOutside :: SemiComputablePred (Clo
 
 newtype OvertSet t = OvertSet {openSetIntersects :: SemiComputablePred (OpenSet t)}
 
-data Grapic t = Graphic
-  { compact :: CompactSet t,
-    -- overt :: OvertSet t,
-    interior :: OpenSet t
-  }
-
--- data Grapic t = Graphic { compact :: CompactSet t, overt :: OvertSet t, interior :: OpenSet t } -- TODO
-
-closedSetIsOutsideFromBallFn ::
-  (Ball R2 -> CSierpinskianWithFalse) ->
-  (ClosedSet R2 -> CSierpinskianWithFalse)
-closedSetIsOutsideFromBallFn isOutside = closedSetIsOutside
-  where
-    closedSetIsOutside (ClosedSetBall b) = isOutside b
-    closedSetIsOutside (ClosedSet {isOutsideClosedSet}) =
-      -- error "simpleTriangleCompact: isOutsideClosedSet not implemented yet"
-      search 0 unitBall
-      where
-        search n b =
-          isOutsideClosedSet b
-            || foldl1 (&&) (map (search (n + 1)) $ subBalls)
-          where
-            subBalls = filter (not . isCertain . isOutside) $ splitBallR2 b
-            isCertain ck = isCertainlyTrue $ (ck ? prec (10 + n * 4))
-
 -- -- a function with "memory", like a
 -- type MFn m t1 t2 = t1 -> m -> (t2, m)
 
@@ -79,35 +54,82 @@ closedSetIsOutsideFromBallFn isOutside = closedSetIsOutside
 -- newtype CompactSetM m t = CompactSetM { closedSetIsOutsideM :: SemiComputablePredM m (ClosedSet t) }
 -- newtype OvertSetM m t = OvertSetM { openSetIntersectsM :: SemiComputablePredM m (OpenSet t) }
 
--- paveCompact :: Precision -> Ball R2 -> Integer -> CompactSet R2 -> [Ball R2]
--- paveCompact pr ball0 maxDepth (CompactSet { closedSetIsOutside }) =
---   pave 0 ball0
---   where
---   pave depth ball =
---     let isOutsideCN = closedSetIsOutside (ClosedSetBall ball) ? pr in
---     case CN.toEither isOutsideCN of
---       Right CertainTrue -> []
---       _ | depth >= maxDepth -> [ball]
---       _ -> concat $ map (pave (depth + 1)) $ splitBallR2 ball
+data Grapic t = Graphic
+  { interior :: OpenSet t,
+    compact :: CompactSet t,
+    overt :: OvertSet t
+  }
 
-paveGraphic :: Precision -> Ball R2 -> Integer -> Grapic R2 -> [Ball R2]
-paveGraphic pr ball0 maxDepth (Graphic (CompactSet {closedSetIsOutside}) interior) =
-  pave 0 ball0
+paveGraphic :: Precision -> Ball R2 -> Integer -> Grapic R2 -> [PavingBall R2]
+paveGraphic
+  pr
+  ball0
+  maxDepth
+  (Graphic interior (CompactSet {closedSetIsOutside}) (OvertSet {openSetIntersects})) =
+    pave 0 ball0
+    where
+      isInside ball = case interior of
+        OpenSet f -> f ball
+        OpenSetBall openBall -> (ball `subBallR2` openBall)
+      pave depth ball
+        | ballInteriorIsInside =
+          [PavingBall {ball, isInside = CertainTrue, isOutside = CertainFalse, intersects = CertainTrue}]
+        | ballIsOutside =
+          [PavingBall {ball, isInside = CertainFalse, isOutside = CertainTrue, intersects = CertainFalse}]
+        | depth < maxDepth =
+          concat $ map (pave (depth + 1)) $ splitBallOverlapR2 ball
+          -- concat $ map (pave (depth + 1)) $ splitBallR2 ball
+        | ballIntersects =
+          [PavingBall {ball, isInside = TrueOrFalse, isOutside = CertainFalse, intersects = CertainTrue}]
+        | otherwise =
+          [PavingBall {ball, isInside = TrueOrFalse, isOutside = TrueOrFalse, intersects = TrueOrFalse}]
+        where
+          ballInteriorIsInside = isTrueCN $ (isInside ball) ? pr
+          ballIsOutside = isTrueCN $ closedSetIsOutside (ClosedSetBall ball) ? pr
+          ballIntersects = isTrueCN $ openSetIntersects (OpenSetBall ball) ? pr
+
+isTrueCN :: CN Kleenean -> Bool
+isTrueCN ckCN = case CN.toEither ckCN of
+  Right v -> isCertainlyTrue v
+  Left _ -> False
+
+-- helper functions for defining compact and overt sets:
+
+canvas :: Ball R2
+canvas = Ball (pt 0 0) (creal 1)
+
+closedSetIsOutsideFromBallFn ::
+  (Ball R2 -> CSierpinskianWithFalse) ->
+  (ClosedSet R2 -> CSierpinskianWithFalse)
+closedSetIsOutsideFromBallFn isOutside = closedSetIsOutside
   where
-    isInside ball = case interior of
-      OpenSet f -> f ball
-      OpenSetBall openBall -> (ball `subBallR2` openBall)
-    pave depth ball =
-      let isOutsideCN = closedSetIsOutside (ClosedSetBall ball) ? pr
-       in let interiorIsInsideCN = (isInside ball) ? pr
-           in case (CN.toEither isOutsideCN, CN.toEither interiorIsInsideCN) of
-                (Right CertainTrue, _) -> []
-                (_, Right CertainTrue) -> [ball]
-                _ | depth >= maxDepth -> [ball]
-                _ -> concat $ map (pave (depth + 1)) $ splitBallR2 ball
+    closedSetIsOutside (ClosedSetBall b) = isOutside b
+    closedSetIsOutside (ClosedSet {isOutsideClosedSet}) =
+      search 0 canvas
+      where
+        search n b =
+          isOutsideClosedSet b
+            || foldl1 (&&) (map (search (n + 1)) $ subBalls)
+          where
+            subBalls = filter (not . isCertain . isOutside) $ splitBallR2 b
+            isCertain ck = isCertainlyTrue $ (ck ? prec (10 + n * 4))
 
-unitBall :: Ball R2
-unitBall = Ball (pt 0 0) (creal 1)
+openSetIntersectsFromBallFn ::
+  (Ball R2 -> CSierpinskianWithFalse) ->
+  (OpenSet R2 -> CSierpinskianWithFalse)
+openSetIntersectsFromBallFn intersects = openSetIntersects
+  where
+    openSetIntersects (OpenSetBall b) = intersects b
+    openSetIntersects (OpenSet {isInOpenSet}) =
+      search 0 canvas
+      where
+        search n b =
+          (isInOpenSet b && (intersects b))
+            || foldl1 (||) (map (search (n + 1)) $ subBalls)
+          where
+            subBalls = filter (isPossible . intersects) $ splitBallR2 b
+            -- isCertain ck = isCertainlyTrue $ (ck ? prec (10 + n * 4))
+            isPossible ck = not . isCertainlyFalse $ (ck ? prec (10 + n * 4))
 
 ---------------------------------------
 -- Example sets
@@ -120,12 +142,20 @@ simpleTriangleCompact =
     isOutside (Ball (Point2D x y) r) =
       x - r + y - r > 0
 
+simpleTriangleOvert :: OvertSet R2
+simpleTriangleOvert =
+  OvertSet {openSetIntersects = openSetIntersectsFromBallFn intersects}
+  where
+    intersects (Ball (Point2D x y) r) =
+      x - r + y - r < 0
+
 simpleTriangleGraphic :: Grapic R2
-simpleTriangleGraphic = Graphic {compact = simpleTriangleCompact, interior}
+simpleTriangleGraphic =
+  Graphic {interior, compact = simpleTriangleCompact, overt = simpleTriangleOvert}
   where
     interior = OpenSet {isInOpenSet}
     isInOpenSet (Ball (Point2D x y) r) =
-      x + r + y + r < 0 && x - r > 0 && y - r > 0
+      x + r + y + r < 0
 
 sierpinskiTriangleCompact :: CompactSet R2
 sierpinskiTriangleCompact =
