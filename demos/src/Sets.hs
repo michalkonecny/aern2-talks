@@ -7,19 +7,16 @@
 {-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 
 module Sets where
+import MixedTypesNumPrelude
+import qualified Numeric.CollectErrors as CN
+
+import Text.Printf (printf)
 
 import AERN2.MP
 import AERN2.Real
 -- import AERN2.MP.WithCurrentPrec
 
-import Data.List (intercalate)
-import qualified Data.List as List
-import Data.Maybe (fromJust)
-import Math.NumberTheory.Logarithms (integerLog2)
-import MixedTypesNumPrelude
-import qualified Numeric.CollectErrors as CN
 import R2
-import Text.Printf (printf)
 
 ---------------------------------------
 -- Types for general subsets
@@ -95,13 +92,11 @@ isTrueCN ckCN = case CN.toEither ckCN of
 
 -- helper functions for defining compact and overt sets:
 
-canvas :: Ball R2
-canvas = Ball (pt 0 0) (creal 1)
-
 closedSetIsOutsideFromBallFn ::
+  Ball R2 ->
   (Ball R2 -> CSierpinskianWithFalse) ->
   (ClosedSet R2 -> CSierpinskianWithFalse)
-closedSetIsOutsideFromBallFn isOutside = closedSetIsOutside
+closedSetIsOutsideFromBallFn canvas isOutside = closedSetIsOutside
   where
     closedSetIsOutside (ClosedSetBall b) = isOutside b
     closedSetIsOutside (ClosedSet {isOutsideClosedSet}) =
@@ -115,9 +110,10 @@ closedSetIsOutsideFromBallFn isOutside = closedSetIsOutside
             isCertain ck = isCertainlyTrue $ (ck ? prec (10 + n * 4))
 
 openSetIntersectsFromBallFn ::
+  Ball R2 ->
   (Ball R2 -> CSierpinskianWithFalse) ->
   (OpenSet R2 -> CSierpinskianWithFalse)
-openSetIntersectsFromBallFn intersects = openSetIntersects
+openSetIntersectsFromBallFn canvas intersects = openSetIntersects
   where
     openSetIntersects (OpenSetBall b) = intersects b
     openSetIntersects (OpenSet {isInOpenSet}) =
@@ -131,72 +127,3 @@ openSetIntersectsFromBallFn intersects = openSetIntersects
             -- isCertain ck = isCertainlyTrue $ (ck ? prec (10 + n * 4))
             isPossible ck = not . isCertainlyFalse $ (ck ? prec (10 + n * 4))
 
----------------------------------------
--- Example sets
----------------------------------------
-
-simpleTriangleCompact :: CompactSet R2
-simpleTriangleCompact =
-  CompactSet {closedSetIsOutside = closedSetIsOutsideFromBallFn isOutside}
-  where
-    isOutside (Ball (Point2D x y) r) =
-      x - r + y - r > 0
-
-simpleTriangleOvert :: OvertSet R2
-simpleTriangleOvert =
-  OvertSet {openSetIntersects = openSetIntersectsFromBallFn intersects}
-  where
-    intersects (Ball (Point2D x y) r) =
-      x - r + y - r < 0
-
-simpleTriangleGraphic :: Grapic R2
-simpleTriangleGraphic =
-  Graphic {interior, compact = simpleTriangleCompact, overt = simpleTriangleOvert}
-  where
-    interior = OpenSet {isInOpenSet}
-    isInOpenSet (Ball (Point2D x y) r) =
-      x + r + y + r < 0
-
-sierpinskiTriangleCompact :: CompactSet R2
-sierpinskiTriangleCompact =
-  CompactSet {closedSetIsOutside = closedSetIsOutsideFromBallFn isOutside}
-  where
-    v1 = pt (-1) (1)
-    v2 = pt (-1) (-1)
-    v3 = pt 1 (-1)
-    awayFrom (Point2D vx vy) (Point2D px py) = Point2D (2 * px - vx) (2 * py - vy)
-    isOutside b =
-      search maxDepth b
-      where
-        maxDepth = 20
-        search n (Ball p@(Point2D x y) r)
-          | n == 0 = error "sierpinskiTriangleCompact: maxDepth reached"
-          | otherwise =
-            (x + y > 2 * r)
-              || ((x < 0) && (y + r > 0) && (search (n - 1) (Ball (awayFrom v1 p) (2 * r))))
-              || ((x + r < 0) && (y + r < 0) && (search (n - 1) (Ball (awayFrom v2 p) (2 * r))))
-              || ((x + r > 0) && (y < 0) && (search (n - 1) (Ball (awayFrom v3 p) (2 * r))))
-
-sierpinskiTriangleGraphic :: Grapic R2
-sierpinskiTriangleGraphic =
-  Graphic {compact = sierpinskiTriangleCompact, interior}
-  where
-    interior = OpenSet {isInOpenSet}
-    isInOpenSet _ = ckleenean False -- this shape has no interior
-
--- data NestedCover =
---   NestedCover { oneBallCover :: Ball R2, maybeSubCover :: Maybe [NestedCover] }
-
--- sierpinskiTriangleCompact :: CompactSetM (Maybe NestedCover) R2
--- sierpinskiTriangleCompact = CompactSetM { closedSetIsOutsideM }
---   where
---   closedSetIsOutsideM (ClosedSetBall (Ball (Point2D x y) r)) maybePrevCover =
---     undefined
---     where
---     prevCover = maybe (NestedCover unitBall Nothing) id maybePrevCover
---     searchCover (NestedCover {oneBallCover, maybeSubCover}) =
---       undefined
-
---   closedSetIsOutsideM _ prevCover =
---     (ckleenean TrueOrFalse, prevCover)
---     -- should implement this properly, but it is not needed for paving
