@@ -87,7 +87,7 @@ sierpinskiTriangleOvert =
         search n (Ball p@(Point2D x y) r)
           | n == 0 = error "sierpinskiTriangleOvert: maxDepth reached"
           | otherwise =
-            (not $ x - r + y - r > 0) -- not outside
+            (not $ x - r + y - r >= 0) -- not outside
               && ( x + r + y + r > 0 -- intersects the main diagonal
                      || (x - r < 0 && x + r > 0) -- intersects the y axis
                      || (y - r < 0 && y + r > 0) -- intersects the x axis
