@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<!-- Load the Paper.js library -->
+	<script type="text/javascript" src="dist/paper-full.min.js"></script>
+	<!-- Define inlined PaperScript associate it with myCanvas -->
+	<script type="text/javascript" src="st4t-cp5.js"></script>
+	<script type="text/javascript">
+		var arrangements = {};
+
+		function draw_arrangement(canvas_name, cpolys) {
+
+			// Get a reference to the canvas object:
+			const canvas = document.getElementById(canvas_name);
+			// Create an empty project and a view for the canvas:
+			paper.setup(canvas);
+
+			// scale the canvas coordinates to fit unit [-1,1]x[-1,1] square canvas:
+			viewW = paper.view.viewSize.width;
+			paper.view.matrix.scale(viewW / 2);
+			// paper.view.viewSize.height = viewW;
+
+			for (const cpoly of cpolys) {
+				colour = cpoly.c;
+				// console.log(t)
+				draw_poly(cpoly.p, colour)
+			}
+
+			// Draw the view now:
+			paper.view.draw();
+		}
+
+		function draw_poly(poly, colour) {
+			const p = new paper.Path();
+			poly.forEach(point => {
+				p.add(new paper.Point(point.x + 1, 1 - point.y));
+			});
+			// console.log(b)
+			p.strokeColor = 'black';
+			p.strokeWidth = 0.00;
+			p.fillColor = colour;
+			// b.opacity = 0.5;
+		}
+
+		// function boxGradient(x, y, w, h) {
+		// 	return {
+		// 		gradient: {
+		// 			stops: ['salmon', 'pink']
+		// 		},
+		// 		origin: new paper.Point(x, y),
+		// 		destination: new paper.Point(x + w, y + h)
+		// 	}
+		// }
+
+		window.onload = function () {
+			draw_arrangement('myCanvas1', polys);
+		}
+	</script>
+</head>
+
+<body>
+	<canvas id="myCanvas1" width="1600px" height="1600px"></canvas>
+	<!-- <canvas id="myCanvas2" width="1000px" height="500px"></canvas> -->
+</body>
+
+</html>
