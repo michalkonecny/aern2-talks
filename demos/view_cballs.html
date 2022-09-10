@@ -5,12 +5,7 @@
 	<!-- Load the Paper.js library -->
 	<script type="text/javascript" src="dist/paper-full.min.js"></script>
 	<!-- Define inlined PaperScript associate it with myCanvas -->
-	<!-- <script type="text/javascript" src="tr-b5.js"></script> -->
-	<!-- <script type="text/javascript" src="tr-b5-nonoverlap.js"></script> -->
-	<!-- <script type="text/javascript" src="tr-b3-slow.js"></script> -->
-	<script type="text/javascript" src="st4-b10.js"></script>
-	<!-- <script type="text/javascript" src="st-b5-nooverlap.js"></script> -->
-	<!-- <script type="text/javascript" src="st-b10.js"></script> -->
+	<script type="text/javascript" src="st4-cb9.js"></script>
 	<script type="text/javascript">
 		var arrangements = {};
 
@@ -26,9 +21,10 @@
 			paper.view.matrix.scale(viewW / 2);
 			// paper.view.viewSize.height = viewW;
 
-			colour = "black";
 			for (const b of bs) {
-				draw_ball(b.c, b.r, colour)
+				colour = b.c;
+				// console.log(t)
+				draw_ball(b.b.c, b.b.r, colour)
 			}
 
 			// Draw the view now:

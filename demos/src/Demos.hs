@@ -9,7 +9,6 @@
 module Demos 
 where
 
-  
 import MixedTypesNumPrelude
 import qualified Numeric.CollectErrors as CN
 
@@ -164,68 +163,6 @@ magnitude x =
   if select (x < 2) (x > 0.25)
     then magnitude_belowTwo x
     else 2 - (magnitude_belowTwo (1/x))
-
----------------------------------------
--- Computing a fractal drawing
----------------------------------------
-
-sierpinskiTriangleTriangles :: Integer -> [Triangle R2]
-sierpinskiTriangleTriangles levels = 
-    iterateABC levels covering0
-    where
-    covering0 = [Triangle a b c]
-
-    a = pt (-1) (-0.9)
-    b = pt (1) (-0.9)
-    c = pt 0 (-0.9 + (sqrt 3))
-
-    iterateABC :: Integer -> [Triangle R2] -> [Triangle R2]
-    iterateABC 0 covering = covering
-    iterateABC n covering = iterateABC (n - 1) covering'
-      where
-      covering' = concat [ [to a t, to b t, to c t] | t <- covering ]
-
-    to p (Triangle p1 p2 p3) = 
-      Triangle (midPt p p1) (midPt p p2) (midPt p p3)
-
-sierpinskiTriangleBalls :: Integer -> [Ball R2]
-sierpinskiTriangleBalls levels = 
-    iterateABC levels covering0
-    where
-    covering0 = [Ball (pt 0 0) (creal 1)]
-
-    a = pt (-1) (-0.9)
-    b = pt (1) (-0.9)
-    c = pt 0 (-0.9 + (sqrt 3))
-
-    iterateABC :: Integer -> [Ball R2] -> [Ball R2]
-    iterateABC 0 covering = covering
-    iterateABC n covering = iterateABC (n - 1) covering'
-      where
-      covering' = concat [ [to a t, to b t, to c t] | t <- covering ]
-
-    to p (Ball c r) = 
-      Ball (midPt p c) (r / 2)
-
-simpleTriangleBalls :: Integer -> [Ball R2]
-simpleTriangleBalls levels = 
-  iter levels ball0
-  where
-  ball0 = Ball (pt 0.5 0.5) (creal 0.5)
-
-  iter 0 ball = [ball]
-  iter n ball =
-    [ballLB] ++ (iter (n-1) ballLT) ++ (iter (n-1) ballRB)
-    where
-    ((ballLB, ballLT), ballRB) = process ball
-
-    process (Ball (Point2D x y) r) =
-      ((ballLB, ballLT), ballRB)
-      where
-      ballLB = Ball (pt (x-r') (y-r')) r'
-      ballLT = Ball (pt (x-r') (y+r')) r'
-      ballRB = Ball (pt (x+r') (y-r')) r'
-      r' = r / 2
 
 ---------------------------------------
 -- Square root via Heron method

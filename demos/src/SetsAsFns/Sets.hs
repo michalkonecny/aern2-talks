@@ -6,7 +6,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 
-module Sets where
+module SetsAsFns.Sets where
 
 import AERN2.MP
 import AERN2.Real

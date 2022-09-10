@@ -6,7 +6,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -Wno-partial-type-signatures #-}
 
-module Triangle where
+module SetsAsFns.Triangle where
 
 import AERN2.MP
 import AERN2.Real
@@ -15,7 +15,7 @@ import qualified Numeric.CollectErrors as CN
 -- import AERN2.MP.WithCurrentPrec
 
 import R2
-import Sets
+import SetsAsFns.Sets
 
 ---------------------------------------
 -- Example sets

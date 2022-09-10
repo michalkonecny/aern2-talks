@@ -8,7 +8,7 @@
 	<!-- <script type="text/javascript" src="tr-b5.js"></script> -->
 	<!-- <script type="text/javascript" src="tr-b5-nonoverlap.js"></script> -->
 	<!-- <script type="text/javascript" src="tr-b3-slow.js"></script> -->
-	<script type="text/javascript" src="st4-b10.js"></script>
+	<script type="text/javascript" src="st-b5.js"></script>
 	<!-- <script type="text/javascript" src="st-b5-nooverlap.js"></script> -->
 	<!-- <script type="text/javascript" src="st-b10.js"></script> -->
 	<script type="text/javascript">
@@ -26,9 +26,26 @@
 			paper.view.matrix.scale(viewW / 2);
 			// paper.view.viewSize.height = viewW;
 
-			colour = "black";
 			for (const b of bs) {
-				draw_ball(b.c, b.r, colour)
+				colour = "white";
+				switch (b.s) {
+					case "inside":
+						colour = "green";
+						break;
+
+					case "outside":
+						colour = "red";
+						break;
+
+					case "intersects":
+						colour = "orange";
+						break;
+
+					default:
+						break;
+				}
+				// console.log(t)
+				draw_ball(b.b.c, b.b.r, colour)
 			}
 
 			// Draw the view now:
@@ -41,9 +58,9 @@
 			const b = new paper.Path.Rectangle(pLT, pRB);
 			// console.log(b)
 			b.strokeColor = 'black';
-			b.strokeWidth = 0.00;
+			b.strokeWidth = 0.001;
 			b.fillColor = colour;
-			// b.opacity = 0.5;
+			b.opacity = 0.5;
 		}
 
 		// function boxGradient(x, y, w, h) {

@@ -28,7 +28,7 @@ pt x y = Point2D {x = creal x, y = creal y}
 midPt :: R2 -> R2 -> R2
 midPt (Point2D x1 y1) (Point2D x2 y2) = Point2D ((x1 + x2) / 2) ((y1 + y2) / 2)
 
-data Triangle t = Triangle t t t
+data Polygon t = Polygon [t]
   deriving (Show)
 
 data Ball t = Ball t CReal
@@ -78,18 +78,57 @@ ballR2ToBlurPoint (Ball (Point2D x y) r) = Point2D xBlur yBlur
     blur :: MPBall -> MPBall -> MPBall
     blur rad = updateRadius (+ (errorBound rad))
 
-trianglesToJSON :: [Triangle R2] -> String
-trianglesToJSON triangles =
-  printf "triangles = [%s]" $ intercalate ",\n" $ map tr triangles
+ballsToJSON :: [Ball R2] -> String
+ballsToJSON pballs =
+  printf "balls = [%s]" $ intercalate ",\n" $ map b pballs
   where
-    tr :: Triangle R2 -> String
-    tr (Triangle a b c) =
-      printf "{ \"v1\": %s, \"v2\": %s, \"v3\": %s }" (p a) (p b) (p c)
+    b :: Ball R2 -> String
+    b (Ball c r) =
+      printf "{ \"c\": %s, \"r\": %s }" (p c) (show $ d r)
     p :: R2 -> String
     p (Point2D x y) =
       printf "{ \"x\": %s, \"y\": %s }" (show $ d x) (show $ d y)
     d :: CReal -> Double
     d = double . centre . unCN . (\r -> r ? (bits 53))
+
+cballsToJSON :: [(Ball R2, Integer)] -> String
+cballsToJSON cballs =
+  printf "balls = [%s]" $ intercalate ",\n" $ map cb cballs
+  where
+    cb :: (Ball R2, Integer) -> String
+    cb (ball, c) =
+      printf "{ \"b\": %s, \"c\": '%s' }" (b ball) colour
+      where
+        colour = colours !! (c `mod` (length colours))
+        colours = ["red", "orange", "green", "blue"]
+    b :: Ball R2 -> String
+    b (Ball c r) =
+      printf "{ \"c\": %s, \"r\": %s }" (p c) (show $ d r)
+    p :: R2 -> String
+    p (Point2D x y) =
+      printf "{ \"x\": %s, \"y\": %s }" (show $ d x) (show $ d y)
+    d :: CReal -> Double
+    d = double . centre . unCN . (\r -> r ? (bits 53))
+
+cpolysToJSON :: [(Polygon R2, Integer)] -> String
+cpolysToJSON cpolys =
+  printf "polys = [%s]" $ intercalate ",\n" $ map cp cpolys
+  where
+    cp :: (Polygon R2, Integer) -> String
+    cp (poly, c) =
+      printf "{ \"p\": %s, \"c\": '%s' }" (pp poly) colour
+      where
+        colour = colours !! (c `mod` (length colours))
+        colours = ["red", "orange", "green", "blue"]
+    pp :: Polygon R2 -> String
+    pp (Polygon points) =
+      printf "[ %s ]" $ intercalate "," $ map p points
+    p :: R2 -> String
+    p (Point2D x y) =
+      printf "{ \"x\": %s, \"y\": %s }" (show $ d x) (show $ d y)
+    d :: CReal -> Double
+    d = double . centre . unCN . (\r -> r ? (bits 53))
+
 
 data PavingBall t = PavingBall
   { ball :: Ball t,
@@ -98,8 +137,8 @@ data PavingBall t = PavingBall
     intersects :: Kleenean
   }
 
-ballsToJSON :: [PavingBall R2] -> String
-ballsToJSON pballs =
+pballsToJSON :: [PavingBall R2] -> String
+pballsToJSON pballs =
   printf "balls = [%s]" $ intercalate ",\n" $ map pb pballs
   where
     pb :: PavingBall R2 -> String
