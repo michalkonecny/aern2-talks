@@ -65,7 +65,7 @@ sierpinskiTrianglePoly levels =
       covering' = concat [ [to a t, to b t, to c t]| t <- covering ]
 
     to p (Polygon points) = 
-      Polygon (map (midPt p) points)
+      Polygon (map (towardsPt (1/2) p) points)
 
 sierpinskiTriangle4CBalls :: Integer -> [(Ball R2, Integer)]
 sierpinskiTriangle4CBalls levels = 
@@ -85,10 +85,10 @@ sierpinskiTriangle4CBalls levels =
       covering' = concat [ zip [to a t, to b t, to c t, to d t] [1..]| (t, _) <- covering ]
 
     to p (Ball c r) = 
-      Ball (midPt p c) (r / 2)
+      Ball (towardsPt (1/2) p c) (r / 2)
 
-sierpinskiTriangle4CPoly :: Integer -> [(Polygon R2, Integer)]
-sierpinskiTriangle4CPoly levels = 
+sierpinskiTetrahedronEquiCPoly :: Integer -> [(Polygon R2, Integer)]
+sierpinskiTetrahedronEquiCPoly levels = 
     iterateABC levels covering0
     where
     covering0 = [(Polygon [a,b,c], 1)]
@@ -105,5 +105,25 @@ sierpinskiTriangle4CPoly levels =
       covering' = concat [ zip [to a t, to b t, to c t, to d t] [1..]| (t, _) <- covering ]
 
     to p (Polygon points) = 
-      Polygon (map (midPt p) points)
+      Polygon (map (towardsPt (1/2) p) points)
+
+sierpinskiTetrahedronTrapCPoly :: Integer -> [(Polygon R2, Integer)]
+sierpinskiTetrahedronTrapCPoly levels = 
+    iterateABC levels covering0
+    where
+    covering0 = [(Polygon [a,b,d,c], 1)]
+
+    a = pt (-1) (-0.9)
+    b = pt (1) (-0.9)
+    c = pt (-1/3) (-0.9 + (sqrt 2))
+    d = pt (1/3) (-0.9 + (sqrt 2))
+
+    -- iterateABC :: Integer -> [Ball R2] -> [Ball R2]
+    iterateABC 0 covering = covering
+    iterateABC n covering = iterateABC (n - 1) covering'
+      where
+      covering' = concat [ zip [to a t, to b t, to c t, to d t] [1..]| (t, _) <- covering ]
+
+    to p (Polygon points) = 
+      Polygon (map (towardsPt (1/2) p) points)
 

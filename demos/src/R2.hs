@@ -25,8 +25,11 @@ data R2 = Point2D {x :: CReal, y :: CReal}
 pt :: (CanBeCReal x, CanBeCReal y) => x -> y -> R2
 pt x y = Point2D {x = creal x, y = creal y}
 
-midPt :: R2 -> R2 -> R2
-midPt (Point2D x1 y1) (Point2D x2 y2) = Point2D ((x1 + x2) / 2) ((y1 + y2) / 2)
+towardsPt :: (CanBeCReal t) => t -> R2 -> R2 -> R2
+towardsPt r (Point2D x1 y1) (Point2D x2 y2) = 
+  Point2D (x1*(1-rR) + x2*rR) (y1*(1-rR) + y2*rR)
+  where
+  rR = creal r
 
 data Polygon t = Polygon [t]
   deriving (Show)
