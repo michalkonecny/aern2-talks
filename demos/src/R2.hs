@@ -122,7 +122,7 @@ cpolysToJSON cpolys =
       printf "{ \"p\": %s, \"c\": '%s' }" (pp poly) colour
       where
         colour = colours !! (c `mod` (length colours))
-        colours = ["red", "orange", "green", "blue"]
+        colours = ["red", "orange", "green", "blue", "pink", "purple", "cyan", "brown", "gold"]
     pp :: Polygon R2 -> String
     pp (Polygon points) =
       printf "[ %s ]" $ intercalate "," $ map p points
