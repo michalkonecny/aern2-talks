@@ -159,19 +159,19 @@ hidekiNineDigits2CPoly :: Integer -> [(Polygon R2, Integer)]
 hidekiNineDigits2CPoly levels = 
     iterateABC levels covering0
     where
-    covering0 = [(Polygon [v2,v9,v3,v8], 1)]
+    covering0 = [(Polygon [v2,v3,v9,v8], 1)]
 
     -- (0,0), (\pm 6,0), (\pm 3, sqrt{3}),  (0,  2 sqrt{3}), (0,  4 sqrt{3}), (\pm 3, pm 5 sqrt{3}).
 
-    v1 = pt (0) (0)
-    v2 = pt (-6/7) (0)
-    v3 = pt (6/7) (0)
-    v4 = pt (-3/7) ((sqrt 3)/7)
-    v5 = pt (3/7) ((sqrt 3)/7)
-    v6 = pt (-3/7) (-(sqrt 3)/7)
-    v7 = pt (3/7) (-(sqrt 3)/7)
-    v8 = pt (0) (4*(sqrt 3)/7)
-    v9 = pt (0) (-4*(sqrt 3)/7)
+    v1 = pt (0) (-0.9+0)
+    v2 = pt (-6/6) (-0.9+0)
+    v3 = pt (6/6) (-0.9+0)
+    v4 = pt (-3/6) (-0.9+(sqrt 3)/6)
+    v5 = pt (3/6) (-0.9+(sqrt 3)/6)
+    v6 = pt (0) (-0.9+2*(sqrt 3)/6)
+    v7 = pt (0) (-0.9+4*(sqrt 3)/6)
+    v8 = pt (-3/6) (-0.9+5*(sqrt 3)/6)
+    v9 = pt (3/6) (-0.9+5*(sqrt 3)/6)
 
     vertices = [v1,v2,v3,v4,v5,v6,v7,v8,v9]
     
